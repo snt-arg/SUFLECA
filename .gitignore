@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.so
+*.so.*
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+runs/
+data/*
+!data/.gitkeep
+!data/model_names.txt
+checkpoints/*
+!checkpoints/.gitkeep

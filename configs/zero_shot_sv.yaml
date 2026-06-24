@@ -1,0 +1,72 @@
+name: sv
+
+retrieval:
+  featurizer: dinov3
+  model_id: facebook/dinov3-vitl16-pretrain-lvd1689m
+  template_root: data/zero_templates/dinov3
+  render_pool: data/render_pool_sufleca
+  image_size: 256
+  top_k: 64
+  fine_agg: symmetric
+  mask_frac: 0.5
+  min_fg_pixels: 32
+
+synsets:
+  "02747177": bin
+  "02808440": bathtub
+  "02818832": bed
+  "02871439": bookcase
+  "02933112": cabinet
+  "03001627": chair
+  "03211117": display
+  "04256520": sofa
+  "04379243": table
+
+vocabulary:
+  trash bin: ["02747177"]
+  trashcan: ["02747177"]
+  garbage can: ["02747177"]
+  dustbin: ["02747177"]
+  waste basket: ["02747177"]
+  basket: ["02747177"]
+  bin: ["02747177"]
+  bathtub: ["02808440"]
+  tub: ["02808440"]
+  bed: ["02818832"]
+  bookcase: ["02871439", "02933112"]
+  bookshelf: ["02871439", "02933112"]
+  shelf: ["02871439", "02933112"]
+  shelving unit: ["02871439", "02933112"]
+  cabinet: ["02933112", "02871439"]
+  drawer: ["02933112"]
+  wardrobe: ["02933112"]
+  dresser: ["02933112"]
+  chair: ["03001627"]
+  armchair: ["03001627", "04256520"]
+  stool: ["03001627"]
+  office chair: ["03001627"]
+  monitor: ["03211117"]
+  display: ["03211117"]
+  screen: ["03211117"]
+  tv: ["03211117"]
+  television: ["03211117"]
+  sofa: ["04256520", "03001627"]
+  couch: ["04256520", "03001627"]
+  table: ["04379243", "02933112"]
+  desk: ["04379243", "02933112"]
+  dining table: ["04379243"]
+  coffee table: ["04379243"]
+  side table: ["04379243", "02933112"]
+  nightstand: ["02933112", "04379243"]
+  toilet seat: ["03001627"]
+  toilet: ["03001627"]
+  cupboard: ["02933112", "02871439"]
+  closet: ["02933112"]
+  chest: ["02933112"]
+  kitchen cabinet: ["02933112"]
+  fridge: ["02933112"]
+  refrigerator: ["02933112"]
+  freezer: ["02933112"]
+  seat: ["03001627"]
+  bench: ["03001627", "04256520"]
+  computer monitor: ["03211117"]

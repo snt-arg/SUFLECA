@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sufleca"
+version = "0.1.0"
+description = "SUFLECA RGB CAD alignment"
+requires-python = ">=3.10"
+dependencies = [
+  "fpsample",
+  "einops",
+  "munch",
+  "moge @ git+https://github.com/microsoft/MoGe.git",
+  "numpy",
+  "numpy-quaternion",
+  "opencv-python",
+  "pillow",
+  "pyyaml",
+  "timm",
+  "torch",
+  "torchvision",
+  "transformers>=4.56.0",
+  "plotly",
+  "ipykernel",
+  "ipympl",
+  "jupyterlab",
+  "kaleido",
+  "trimesh",
+  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+  # sapien 2.2 still imports pkg_resources, removed from setuptools>=81.
+  "sapien==2.2.*",
+  "setuptools<81",
+]
+
+[tool.setuptools.packages.find]
+include = ["sufleca*"]
