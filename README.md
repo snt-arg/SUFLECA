@@ -2,7 +2,7 @@
 
 Release code for **SUFLECA**, a fast and accurate weakly supervised algorithm for fitting CAD models to images.
 
-This repo provides the inference and evaluation stack: the SUFLECA feature extractor, the alignment code, the single-view evaluator on ScanNet25k, and a zero-shot demo notebook.
+This repo provides the inference and evaluation stack: the SUFLECA feature extractor, the alignment code, the single-view evaluator on ScanNet25k, and a demo notebook.
 
 > **Scope.** We release the trained models along with the code to run and evaluate them. The training and data-preparation code are not planned to be released.
 
@@ -54,8 +54,8 @@ The **render pool is generated locally** (it is too large to distribute): see [G
 
 | Artifact | Local path | Source |
 | --- | --- | --- |
-| SUFLECA checkpoints | `checkpoints/` | released |
-| Scan2CAD / ScanNet25k data | `data/ScanNet25k/` | released |
+| SUFLECA checkpoints | `checkpoints/` | [released](https://github.com/snt-arg/SUFLECA/releases/tag/v1) |
+| Scan2CAD / ScanNet25k data | `data/ScanNet25k/` | [released](https://github.com/snt-arg/SUFLECA/releases/tag/v1) |
 | Render pool | `data/render_pool_<checkpoint>/` | **generated** |
 | CAD centers JSON | `data/cad_orig_centers.json` | **generated** |
 | DINOv3 zero-shot template index | `data/zero_templates/dinov3/` | **generated** |
@@ -77,9 +77,11 @@ Expected checkpoint config files:
 | `sufleca-small` | `checkpoints/sufleca-small/best.pt` | `checkpoints/sufleca-small/config.json` |
 | `sufleca-wo-scannet` | `checkpoints/sufleca-wo-scannet/best.pt` | `checkpoints/sufleca-wo-scannet/config.json` |
 
+`sufleca` is the default checkpoint trained on 674k images with partial NOC annotations. `sufleca-wo-scannet` is the checkpoint that excludes ScanNet-derived images for the strict zero-shot setting and is the one used for evaluations in the paper. `sufleca-small` is the smaller version (29M vs 102M parameters) referred to as SUFLECA-S in the paper.
+
 ## Generating the render pool
 
-The render pool is built from ShapeNetCore.v2 (scripts in `scripts/`). The CADs are listed in `data/model_names.txt` (`<synset>/<model_id>` per line). The SAPIEN/trimesh rendering dependencies are installed by `scripts/create_env.sh` (the `render` extra).
+The render pool is built from ShapeNetCore.v2 (scripts in `scripts/`). The CADs are listed in `data/model_names.txt` (`<synset>/<model_id>` per line). The SAPIEN/trimesh rendering dependencies are installed by `scripts/create_env.sh`.
 
 ### ShapeNet meshes
 
@@ -129,17 +131,6 @@ The pool name and cache metadata are checkpoint-specific. `eval_sv.py` derives `
 
 The evaluator does not recompute render features on the fly: step 2 must be run whenever the checkpoint, image size, or view set changes. The cached `meta` block records the `checkpoint` and `image_size`, and stale caches are ignored automatically.
 
-### Zero-shot template index
-
-The optional **zero-shot** retrieval pipeline needs its own template index, built by `scripts/build_zoom_templates.sh`. This is self-contained: it renders 48 zoomed-in partial-object views per CAD (separate from the alignment render pool's canonical views) at retrieval size 256, featurizes them with DINOv3, and streams the staging renders away one synset at a time so peak disk stays bounded to a single category:
-
-```bash
-scripts/build_zoom_templates.sh \
-    --shapenet-root /path/to/ShapeNetCore.v2 \
-    --synsets 03001627 --workers 6
-```
-
-Omit `--synsets` to build all nine categories. This writes `data/zero_templates/dinov3/<synset>/{singles.npy, index.json, dense/, meta.json}`, the coarse descriptors and on-demand dense patch features used by `sufleca.zero_shot`. Retrieval runs at size 256 (the templates) while alignment runs at size 448 (the render-pool feature caches). Both are fixed in `configs/zero_shot_sv.yaml`.
 
 ## Evaluation
 
@@ -164,7 +155,17 @@ python evaluation/eval_sv.py \
 
 **Note on reproducibility.** GPU feature extraction and RANSAC are not deterministic run-to-run, so accuracy fluctuates slightly between identical runs.
 
-## Zero-Shot Demo
+## Demo: In-the-wild CAD alignment
+
+While SUFLECA is a zero-shot CAD _alignment_ method, the base evaluation from `eval_sv.py` uses ROCA's supervised CAD retrieval. The optional zero-shot retrieval pipeline needs its own template index, built by `scripts/build_zoom_templates.sh`. This is self-contained: it renders 48 zoomed-in partial-object views per CAD (separate from the alignment render pool's canonical views) at retrieval size 256, featurizes them with DINOv3, and streams the staging renders away one synset at a time so peak disk stays bounded to a single category:
+
+```bash
+scripts/build_zoom_templates.sh \
+    --shapenet-root /path/to/ShapeNetCore.v2 \
+    --synsets 03001627 --workers 6
+```
+
+Omit `--synsets` to build all nine categories. This writes `data/zero_templates/dinov3/<synset>/{singles.npy, index.json, dense/, meta.json}`, the coarse descriptors and on-demand dense patch features used by `sufleca.zero_shot`. Retrieval runs at size 256 (the templates) while alignment runs at size 448 (the render-pool feature caches). Both are fixed in `configs/zero_shot_sv.yaml`.
 
 `demo.ipynb` runs the full pipeline on a single image at `examples/chair1.jpg`, given the locally generated `data/render_pool_sufleca/` and `data/zero_templates/dinov3/` (see [Generating the render pool](#generating-the-render-pool)). Pick a prompt mode at the top: `interactive` (drag a box in the notebook) or `grounding_dino` (`IDEA-Research/grounding-dino-base`, box from a text prompt). It then masks with SAM2, writes metric depth with MoGe-2, gates the label through `configs/zero_shot_sv.yaml`, retrieves the CAD with DINOv3, and calls `align_single_view`, ending with the aligned CAD overlaid on the image and a 3D visualization.
 
