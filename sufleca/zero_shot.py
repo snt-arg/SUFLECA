@@ -1,3 +1,18 @@
+# =============================================================================
+# SUFLECA
+#
+# SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+# SPDX-License-Identifier: Apache-2.0
+#
+# File: sufleca/zero_shot.py
+#
+# Copyright © 2023-2026 University of Luxembourg
+# Developed by Saad Ejaz at SnT/ARG.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# =============================================================================
+
 """Zero-shot CAD retrieval: DINOv3 coarse-to-fine search over a template index.
 
 The object label gates which ShapeNet synsets are searched (via the SV

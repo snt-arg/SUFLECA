@@ -1,3 +1,18 @@
+# =============================================================================
+# SUFLECA
+#
+# SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+# SPDX-License-Identifier: Apache-2.0
+#
+# File: sufleca/model/extractor.py
+#
+# Copyright © 2023-2026 University of Luxembourg
+# Developed by Saad Ejaz at SnT/ARG.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# =============================================================================
+
 """The SUFLECA feature extractor: a frozen, hooked DUNE ViT encoder + DPT head."""
 from __future__ import annotations
 

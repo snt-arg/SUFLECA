@@ -1,3 +1,18 @@
+# =============================================================================
+# SUFLECA
+#
+# SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+# SPDX-License-Identifier: Apache-2.0
+#
+# File: evaluation/eval_sv.py
+#
+# Copyright © 2023-2026 University of Luxembourg
+# Developed by Saad Ejaz at SnT/ARG.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# =============================================================================
+
 """Evaluate single-view CAD alignment on the ScanNet25k val split.
 
 Two phases:

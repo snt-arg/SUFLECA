@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+# =============================================================================
+# SUFLECA
+#
+# SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+# SPDX-License-Identifier: Apache-2.0
+#
+# File: scripts/build_cad_centers.py
+#
+# Copyright © 2023-2026 University of Luxembourg
+# Developed by Saad Ejaz at SnT/ARG.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# =============================================================================
+
 """Collect per-CAD original bbox centres into a single cad_orig_centers.json.
 
 Walks a render pool produced by ``render_cads.py`` and reads ``center_orig``

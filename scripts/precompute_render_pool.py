@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+# =============================================================================
+# SUFLECA
+#
+# SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+# SPDX-License-Identifier: Apache-2.0
+#
+# File: scripts/precompute_render_pool.py
+#
+# Copyright © 2023-2026 University of Luxembourg
+# Developed by Saad Ejaz at SnT/ARG.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# =============================================================================
+
 """Precompute the cached SUFLECA features used during render-target selection.
 
 Consumes the per-view assets written by ``render_cads.py`` and writes, per CAD:

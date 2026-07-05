@@ -1,3 +1,18 @@
+# =============================================================================
+# SUFLECA
+#
+# SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+# SPDX-License-Identifier: Apache-2.0
+#
+# File: sufleca/demo_utils.py
+#
+# Copyright © 2023-2026 University of Luxembourg
+# Developed by Saad Ejaz at SnT/ARG.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# =============================================================================
+
 """Demo helpers: model loading (depth/SAM/Grounding DINO), and the
 visualizations used by ``demo.ipynb`` (CAD re-render, correspondences, CAD
 overlay, and the 3D alignment figure)."""
