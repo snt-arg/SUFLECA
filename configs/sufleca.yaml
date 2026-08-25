@@ -9,7 +9,7 @@ image_processing:
   iqr_limit: 1.5
 
 ransac:
-  inlier_threshold: 0.11
+  inlier_threshold: 0.08
   pct_multiplier: 0.30
   max_iterations: 300000
 
@@ -17,8 +17,7 @@ correspondence:
   mknn:
     n_points: 1024
     max_correspondences: 256
-    k: 13
+    k: 12
   geo_filter:
-    beta: 0.01
-    aniso_shrink: 0.5
-    rel_thresh: 0.05
+    beta: 0.25        # consensus band; 0 disables the filter
+    rel_thresh: 0.40  # min agreement with the consensus clique

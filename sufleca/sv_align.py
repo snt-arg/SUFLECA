@@ -105,7 +105,6 @@ def align_single_view(
     mknn_max_correspondences = get_config_value(config, "correspondence.mknn.max_correspondences")
     mknn_k = int(get_config_value(config, "correspondence.mknn.k"))
     geo_filter_beta = float(get_config_value(config, "correspondence.geo_filter.beta"))
-    geo_filter_aniso_shrink = float(get_config_value(config, "correspondence.geo_filter.aniso_shrink"))
     geo_filter_rel_thresh = float(get_config_value(config, "correspondence.geo_filter.rel_thresh"))
 
     if not (os.path.exists(color_path) and os.path.exists(sam_mask_path) and os.path.exists(depth_path)):
@@ -237,7 +236,6 @@ def align_single_view(
             target_points[final_corres[:, 1]],
             beta=geo_filter_beta,
             rel_thresh=geo_filter_rel_thresh,
-            aniso_shrink=geo_filter_aniso_shrink,
         )
         if keep.sum() >= 7:
             final_corres = final_corres[keep]

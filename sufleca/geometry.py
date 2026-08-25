@@ -55,44 +55,61 @@ def voxel_clean_indices(points, grid_size=16, min_count_per_voxel=2):
     return valid_voxels[inverse]
 
 
-def geometric_consensus_score(src_pts, tgt_pts, beta, n_iter=50, hist_bins=60):
-    M = len(src_pts)
-    if M < 3 or beta <= 0:
-        return np.ones(M)
-    src = np.asarray(src_pts, dtype=float)
-    tgt = np.asarray(tgt_pts, dtype=float)
-    Dsrc = np.linalg.norm(src[:, None, :] - src[None, :, :], axis=2)
-    Dtgt = np.linalg.norm(tgt[:, None, :] - tgt[None, :, :], axis=2)
-    eps = 1e-6
-    logr = np.log(np.maximum(Dtgt, eps)) - np.log(np.maximum(Dsrc, eps))
-    iu = np.triu_indices(M, 1)
-    vals = logr[iu]
-    finite = vals[np.isfinite(vals)]
-    if finite.size == 0 or np.ptp(finite) < 1e-9:
-        return np.ones(M)
-    hist, edges = np.histogram(finite, bins=hist_bins)
-    kbin = int(np.argmax(hist))
-    s_hat = 0.5 * (edges[kbin] + edges[kbin + 1])
-    C = (np.abs(logr - s_hat) < beta).astype(float)
-    np.fill_diagonal(C, 0.0)
-    e = np.ones(M) / np.sqrt(M)
-    for _ in range(n_iter):
-        e = C @ e
-        n = np.linalg.norm(e)
-        if n < 1e-12:
-            break
-        e = e / n
-    return np.abs(e)
+def _max_clique_bitset(adj, budget=20000):
+    """Maximum clique by branch-and-bound over bitset neighbourhoods; on exhausting
+    `budget` expansions it returns the best clique found so far."""
+    M = len(adj)
+    nbr = [0] * M
+    for i in range(M):
+        m = 0
+        for j in np.flatnonzero(adj[i]):
+            m |= 1 << int(j)
+        nbr[i] = m
+
+    best: list = []
+    calls = [0]
+
+    def colour(P):
+        """Greedy colouring of bitset P -> [(vertex, colour_bound)] ascending."""
+        order, k = [], 0
+        uncoloured = P
+        while uncoloured:
+            k += 1
+            avail = uncoloured
+            while avail:
+                v = (avail & -avail).bit_length() - 1
+                avail &= ~(1 << v)
+                avail &= ~nbr[v]          # keep the colour class independent
+                uncoloured &= ~(1 << v)
+                order.append((v, k))
+        return order
+
+    def expand(R, P):
+        calls[0] += 1
+        if calls[0] > budget:
+            return
+        for v, bound in reversed(colour(P)):
+            if len(R) + bound <= len(best):
+                return
+            R.append(v)
+            if len(R) > len(best):
+                best[:] = R
+            Pn = P & nbr[v]
+            if Pn:
+                expand(R, Pn)
+            R.pop()
+            P &= ~(1 << v)
+            if calls[0] > budget:
+                return
+
+    expand([], (1 << M) - 1)
+    return best
 
 
-def _axis_aligned_consensus_score(
-    src_pts,
-    tgt_pts,
-    beta,
-    aniso_shrink=1.0,
-    n_iter=50,
-    hist_bins=60,
-):
+def geometric_consensus_score(src_pts, tgt_pts, beta, hist_bins=60):
+    """Score each correspondence by the fraction of the maximum consensus clique it
+    agrees with. Two correspondences agree when their target distance matches their
+    source distance under one global scale, to a relative squared tolerance `beta`."""
     M = len(src_pts)
     if M < 4 or beta <= 0:
         return np.ones(M)
@@ -102,69 +119,42 @@ def _axis_aligned_consensus_score(
 
     iu = np.triu_indices(M, 1)
     d = src[iu[0]] - src[iu[1]]
-    y = np.sum((tgt[iu[0]] - tgt[iu[1]]) ** 2, axis=1)
     ld = np.sum(d * d, axis=1)
+    y = np.sum((tgt[iu[0]] - tgt[iu[1]]) ** 2, axis=1)
     valid = ld > 1e-12
     if int(valid.sum()) < 6:
-        return geometric_consensus_score(src, tgt, beta, n_iter=n_iter, hist_bins=hist_bins)
-    d, y, ld = d[valid], y[valid], ld[valid]
+        return np.ones(M)
+    y, ld = y[valid], ld[valid]
 
     lr = 0.5 * np.log(np.maximum(y, eps)) - 0.5 * np.log(np.maximum(ld, eps))
     if np.ptp(lr) < 1e-9:
-        log_shat = float(np.median(lr))
+        log_s = float(np.median(lr))
     else:
         hist, edges = np.histogram(lr, bins=hist_bins)
         kbin = int(np.argmax(hist))
-        log_shat = 0.5 * (edges[kbin] + edges[kbin + 1])
-
-    g2 = y / ld
-    feat = (d * d) / ld[:, None]
-    s = np.full(3, float(np.median(g2)))
-    w = np.ones(len(g2))
-    for _ in range(5):
-        WF = feat * w[:, None]
-        try:
-            s = np.linalg.solve(feat.T @ WF + 1e-9 * np.eye(3), WF.T @ g2)
-        except np.linalg.LinAlgError:
-            s = np.linalg.lstsq(feat.T @ WF, WF.T @ g2, rcond=None)[0]
-        s = np.maximum(s, eps)
-        r = np.log(np.maximum(g2, eps)) - np.log(np.maximum(feat @ s, eps))
-        med = np.median(r)
-        mad = np.median(np.abs(r - med)) + eps
-        c = 1.345 * 1.4826 * mad
-        w = np.where(np.abs(r - med) <= c, 1.0, c / np.maximum(np.abs(r - med), eps))
-
-    if aniso_shrink < 1.0:
-        ls = 0.5 * np.log(np.maximum(s, eps))
-        ls = log_shat + aniso_shrink * (ls - log_shat)
-        s = np.exp(2.0 * ls)
+        log_s = 0.5 * (edges[kbin] + edges[kbin + 1])
+    s2 = float(np.exp(2.0 * log_s))
 
     Dvec = src[:, None, :] - src[None, :, :]
-    pred2 = np.maximum((Dvec ** 2) @ s, eps)
+    pred2 = np.maximum(s2 * np.sum(Dvec * Dvec, axis=2), eps)
     Dtgt2 = np.sum((tgt[:, None, :] - tgt[None, :, :]) ** 2, axis=2)
-    resid = (Dtgt2 - pred2) / pred2
-    C = (np.abs(resid) < beta).astype(float)
-    np.fill_diagonal(C, 0.0)
-    e = np.ones(M) / np.sqrt(M)
-    for _ in range(n_iter):
-        e = C @ e
-        n = np.linalg.norm(e)
-        if n < 1e-12:
-            break
-        e = e / n
-    return np.abs(e)
+    adj = np.abs((Dtgt2 - pred2) / pred2) < beta
+    np.fill_diagonal(adj, False)
+
+    clique = _max_clique_bitset(adj)
+    if not clique:
+        return np.zeros(M)
+    frac = adj[:, clique].sum(axis=1) / float(len(clique))
+    frac[clique] = 1.0
+    return frac
 
 
-def geometric_consensus_mask(src_pts, tgt_pts, beta, rel_thresh=0.05, aniso_shrink=1.0):
+def geometric_consensus_mask(src_pts, tgt_pts, beta, rel_thresh=0.40):
+    """Keep-mask dropping correspondences isolated from the consensus clique."""
     M = len(src_pts)
     if M < 3 or beta <= 0:
         return np.ones(M, dtype=bool)
-    e = _axis_aligned_consensus_score(
-        src_pts,
-        tgt_pts,
-        beta,
-        aniso_shrink=aniso_shrink,
-    )
+    e = geometric_consensus_score(src_pts, tgt_pts, beta)
     emax = e.max()
     if emax <= 0:
         return np.zeros(M, dtype=bool)
