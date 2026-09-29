@@ -1,5 +1,9 @@
 <h1 align="center">🥊 SUFLECA 🥊</h1>
 
+<p align="center">
+  <a href="https://arxiv.org/abs/2607.15058"><img src="https://img.shields.io/badge/arXiv-2607.15058-b31b1b.svg?logo=arxiv&logoColor=white" alt="arXiv" /></a>
+</p>
+
 Release code for **SUFLECA**, a fast and accurate weakly supervised algorithm for fitting CAD models to images.
 
 This repo provides the inference and evaluation stack: the SUFLECA feature extractor, the alignment code, the single-view evaluator on ScanNet25k, and a demo notebook.
