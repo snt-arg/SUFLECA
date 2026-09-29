@@ -74,8 +74,14 @@ class RANSACCriterion : public AbstractCriterion
             const double q = pow(static_cast<double>(kScore_.getInlierNumber()) / kData_.rows(), kSampleSize_);
             const double log2 = log(1 - q);
 
+            // q == 0 (no inliers yet) makes log2 exactly 0. Without the
+            // return this fell through to logConfidence / 0.0 == -inf, whose
+            // cast to size_t is undefined behaviour.
             if (abs(log2) < std::numeric_limits<double>::epsilon())
+            {
                 iterationNumber_ = std::numeric_limits<size_t>::max();
+                return;
+            }
 
             const double iter = logConfidence / log2;
             iterationNumber_ = static_cast<size_t>(iter) + 1;

@@ -168,7 +168,18 @@ void SupeRansac::run(const DataMatrix &kData_)
                 }
             }
 
-            // Update the termination criterion
+        }
+
+        // Update the termination criterion.
+        //
+        // This check used to sit INSIDE the local-optimization branch above.
+        // localOptimizationInsideTheLoop defaults to false and nothing sets
+        // it, so the criterion was unreachable in every configuration:
+        // maxIterations never shrank below settings.maxIterations and every
+        // run burned its whole budget regardless of `confidence`. A 256-point
+        // problem with a 100% inlier ratio ran all 200000 iterations.
+        if (isModelUpdated)
+        {
             terminationCriterion->check(
                 kData_, // Data matrix
                 bestScore, // The score of the best model
